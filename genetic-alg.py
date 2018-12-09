@@ -3,45 +3,54 @@ import functions
 import numpy as np
 import matplotlib.pyplot as plt
 
-def fitness_sort(population, func):
-    ## Bubble sort in order of least to greatest value of (func(population[i]))
-    ## where (population[i]) is a species of population
-    pop_len = len(population)
-    continue_iterations = False     ## Check if there is found already
-    sort = False
+def fitness(func, best_species, precision):
 
-    while(not sort):
-        sort = True
-        for i in range(pop_len - 1):
-            for j in range(i + 1, pop_len):
-                if (func(population[i]) < func(population[j])):
-                    tmp = population[i]
-                    population[i] = population[j]
-                    population[j] = tmp
-                    sort = False
-                    continue_iterations = True
-    
-    return continue_iterations
+    if (len(best_species) > 1 and 
+        abs(func(best_species[len(best_species) - 1]) - 
+            func(best_species[len(best_species) - 2])) < precision):
+    # должно работать с этим условием, но пока что нет)
+    # if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
+        return False
+    else: return True
 
 
 def roulette_selection(population, func_to_optimize, population_limit):
-    ## returns slice of population list because it is already sorted in order of optimal value due to the fitness function
+    
+    
+
     if (len(population) > population_limit):
+        pop_len = len(population)
+        sort = False
+
+        while(not sort):
+            sort = True
+            for i in range(pop_len - 1) if pop_len < population_limit else range(population_limit - 1):
+                for j in range(i + 1, pop_len):
+                    if (func_to_optimize(population[i]) > func_to_optimize(population[j])):
+                        tmp = population[i]
+                        population[i] = population[j]
+                        population[j] = tmp
+                        sort = False
+
+        
         return population[0:population_limit - 1]
     else: return population
 
 
 def tournament_selection(population, func_to_optimize, population_limit):
     new_population = []
-    population_len = len(population)
 
-    for i in range(population_limit):
-        first_rand = random.randint(0, population_len - 1)
-        second_rand = random.randint(0, population_len - 1)
-        if (func(population[first_rand]) < func(population[second_rand])):
+    for i in range(population_limit) if population_limit < len(population) else range(len(population)):
+
+        first_rand = random.randint(0, len(population) - 1)
+        second_rand = random.randint(0, len(population) - 1)
+        if (func_to_optimize(population[first_rand]) < func_to_optimize(population[second_rand])):
             new_population.append(population[first_rand])
-        else: new_population.append(population[second_rand])
-    
+            population.remove(population[first_rand])
+        else: 
+            new_population.append(population[second_rand])
+            population.remove(population[second_rand])
+
     return new_population
 
 
@@ -91,51 +100,68 @@ def uniform_crossover(population, crossover_probability):
     return new_population
 
 
-def mutate(population, ranges, mutation_probability):
+def mutate(population, ranges, mutation_probability, mutate_coef=0.1):
     mutated_population = population[::]
     dimension = len(population[0])
 
     for i in range(len(mutated_population)):
-        for j in range(dimension):
-            if (random.random() < mutation_probability):
-                mutated_population[i][j] = (ranges[j*dimension - 1] - ranges[j*dimension]) * random.random() + ranges[j*dimension]
-    
+        if (random.random() < mutation_probability):
+
+            for j in range(dimension):
+                # mutate gene in range of function
+                while(True):
+                    mutated_gene = population[i][j] + (ranges[j*dimension] - ranges[j*dimension - 1])*random.choice(np.arange(-mutate_coef, mutate_coef, 0.01))
+                    if not (mutated_gene < ranges[j*dimension] or mutated_gene > ranges[j*dimension + 1]):
+                        population[i][j] = mutated_gene
+                        break
+
     return mutated_population
+
+
+def find_better_species(population, func_to_optimize):
+
+    minIdx = 0
+    for i in range(len(population)):
+        if (func_to_optimize(population[minIdx]) > func_to_optimize(population[i])):
+            minIdx = i
+    return population[minIdx]
 
 
 def gen_alg(crossover_func, mutation_func, selection_func,
                 func_to_optimize, dimension, function_ranges,
                 crossover_probability=0.5, mutation_pobability=0.1,
-                fitness_func=fitness_sort, initial_population=5, population_limit=5, iteration_limit=100):
+                fitness_func=fitness, initial_population=5, population_limit=5, precision=1e-2):
 
-    if not (0 <= crossover_probability <= 1 and 0 <= mutation_pobability <= 0.1 and iteration_limit > 0
+    if not (0 <= crossover_probability <= 1 and 0 <= mutation_pobability <= 0.1 and precision > 0 and precision < 1
                 and initial_population > 0 and population_limit > 0 and dimension > 0):
         raise AttributeError('Wrong probabilities')
 
     ## Initial population
-    population = [[(ranges[j*dimension - 1] - ranges[j*dimension]) * random.random() + ranges[j*dimension] for j in range(dimension)]
+    population = [[(function_ranges[j*dimension - 1] - function_ranges[j*dimension]) * random.random() + function_ranges[j*dimension] for j in range(dimension)]
                     for i in range(initial_population)]
 
 
+    best_species = []
+    counter = 0
+
     i = 0
-    while(i < iteration_limit and fitness_func(population, func_to_optimize)):
+    while(fitness_func(func_to_optimize, best_species, precision)):
 
         population = selection_func(population, func_to_optimize, population_limit)
 
         population = crossover_func(population, crossover_probability)
 
-        population = mutation_func(population, ranges, mutation_pobability)
+        population = mutation_func(population, function_ranges, mutation_pobability)
         
+        best_species.append(find_better_species(population, func_to_optimize))
+
         print(i)
         i = i + 1
 
-    print(i, " ", "iterations")
-    minIdx = 0
-    for i in range(len(population)):
-        if (func(population[minIdx]) > func(population[i])):
-            minIdx = i
 
-    return population[minIdx], population
+    return find_better_species(population, func_to_optimize), population, best_species
+
+
 
 ###OPTIONS      parameter name              example
 ##--------------------------------------------------------------------------------
@@ -153,21 +179,21 @@ def gen_alg(crossover_func, mutation_func, selection_func,
 ## CROSSOVER_P  (crossover_probability):    0 <= x <= 1
 ##--------------------------------------------------------------------------------
 ################# CHANGE HERE
-FUNCTION = functions.fifth()
+FUNCTION = functions.third()
 CROSSOVER = uniform_crossover
 SELECTION = tournament_selection
 MUTATION_PROBABILITY = 0.1
 CROSSOVER_PROBABILITY = 0.5
-INITIAL_POPULATION = 30
-POPULATION_LIMIT = 10
-ITERATION_LIMIT = 100
+INITIAL_POPULATION = 100
+POPULATION_LIMIT = 30
+PRECISION = 1e-5
 #################################################
 func, dimension, ranges, print_plot = FUNCTION
-pop, population = gen_alg(crossover_func=CROSSOVER, mutation_func=mutate, selection_func=SELECTION,
+pop, population, best_species = gen_alg(crossover_func=CROSSOVER, mutation_func=mutate, selection_func=SELECTION,
                             func_to_optimize=func, dimension=dimension, function_ranges=ranges,
                             crossover_probability=CROSSOVER_PROBABILITY, mutation_pobability=MUTATION_PROBABILITY,
-                            fitness_func=fitness_sort, initial_population=INITIAL_POPULATION, 
-                            population_limit=POPULATION_LIMIT, iteration_limit=ITERATION_LIMIT)
+                            fitness_func=fitness, initial_population=INITIAL_POPULATION, 
+                            population_limit=POPULATION_LIMIT, precision=PRECISION)
 
 
 ### SHOWING RESULTS
@@ -178,6 +204,8 @@ print_plot()
 if (func != functions.__first):
     for p in population:
         plt.plot(p[0], p[1], 'wo')
+    for p in best_species:
+        plt.plot(p[0], p[1], 'bo')
     plt.plot(pop[0], pop[1], 'ro')
 else:
     for p in population:
