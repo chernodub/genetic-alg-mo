@@ -5,13 +5,16 @@ import matplotlib.pyplot as plt
 
 def fitness(func, best_species, precision):
 
-    # if (len(best_species) > 1 and 
-    #     abs(func(best_species[len(best_species) - 1]) - 
-    #         func(best_species[len(best_species) - 2])) < precision):
+    if (len(best_species) > 1 and
+        abs(func(best_species[- 1]) -
+            func(best_species[- 2])) < precision and
+            not (best_species[-1] == best_species[-2]) and
+            np.linalg.norm(np.array(best_species[-1]) - np.array(best_species[-2])) < precision):
     # должно работать с этим условием, но пока что нет)
-    if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
+    # if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
         return False
-    else: return True
+    else:
+        return True
 
 
 def roulette_selection(population, func_to_optimize, population_limit):
@@ -100,18 +103,20 @@ def uniform_crossover(population, crossover_probability):
     return new_population
 
 
-def mutate(population, ranges, mutation_probability, mutate_coef=0.1, precision = 1e-2):
+def mutate(population, ranges, mutation_probability, mutate_coef=0.01, precision = 1e-2):
     mutated_population = population[::]
     dimension = len(population[0])
 
     for i in range(len(mutated_population)):
         if (random.random() < mutation_probability):
 
+
             for j in range(dimension):
+                dim_mutate_coef = mutate_coef / abs(ranges[j * dimension] - ranges[j * dimension - 1])
                 # mutate gene in range of function
                 while(True):
-                    mutate_coef = mutate_coef / abs(ranges[j*dimension] - ranges[j*dimension - 1])
-                    mutated_gene = population[i][j] + (ranges[j*dimension] - ranges[j*dimension - 1])*random.choice(np.arange(-mutate_coef, mutate_coef, precision/10))
+                    mutated_gene = population[i][j] + (ranges[j*dimension] - ranges[j*dimension - 1])*\
+                                   (random.random()*dim_mutate_coef*(-1 if random.random() > 0.5 else 1))
                     if not (mutated_gene < ranges[j*dimension] or mutated_gene > ranges[j*dimension + 1]):
                         population[i][j] = mutated_gene
                         break
@@ -159,7 +164,7 @@ def gen_alg(crossover_func, mutation_func, selection_func,
         precision=precision, mutate_coef=mutate_coef)
 
         best_species.append(find_better_species(population, func_to_optimize))
-        print(func_to_optimize(best_species[-1]))
+        print(func_to_optimize(best_species[-1]), best_species[-1])
         print(i)
         i = i + 1
 
