@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 
 def fitness(func, best_species, precision):
 
-    if (len(best_species) > 1 and 
-        abs(func(best_species[len(best_species) - 1]) - 
-            func(best_species[len(best_species) - 2])) < precision):
+    # if (len(best_species) > 1 and 
+    #     abs(func(best_species[len(best_species) - 1]) - 
+    #         func(best_species[len(best_species) - 2])) < precision):
     # должно работать с этим условием, но пока что нет)
-    # if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
+    if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
         return False
     else: return True
 
@@ -100,7 +100,7 @@ def uniform_crossover(population, crossover_probability):
     return new_population
 
 
-def mutate(population, ranges, mutation_probability, mutate_coef=0.1):
+def mutate(population, ranges, mutation_probability, mutate_coef=0.1, precision = 1e-2):
     mutated_population = population[::]
     dimension = len(population[0])
 
@@ -110,7 +110,8 @@ def mutate(population, ranges, mutation_probability, mutate_coef=0.1):
             for j in range(dimension):
                 # mutate gene in range of function
                 while(True):
-                    mutated_gene = population[i][j] + (ranges[j*dimension] - ranges[j*dimension - 1])*random.choice(np.arange(-mutate_coef, mutate_coef, 0.01))
+                    mutate_coef = mutate_coef / abs(ranges[j*dimension] - ranges[j*dimension - 1])
+                    mutated_gene = population[i][j] + (ranges[j*dimension] - ranges[j*dimension - 1])*random.choice(np.arange(-mutate_coef, mutate_coef, precision/10))
                     if not (mutated_gene < ranges[j*dimension] or mutated_gene > ranges[j*dimension + 1]):
                         population[i][j] = mutated_gene
                         break
@@ -142,7 +143,6 @@ def gen_alg(crossover_func, mutation_func, selection_func,
 
 
     best_species = []
-    counter = 0
 
     i = 0
     while(fitness_func(func_to_optimize, best_species, precision)):
@@ -151,10 +151,15 @@ def gen_alg(crossover_func, mutation_func, selection_func,
 
         population = crossover_func(population, crossover_probability)
 
-        population = mutation_func(population, function_ranges, mutation_pobability)
-        
-        best_species.append(find_better_species(population, func_to_optimize))
+        if (len(best_species) > 1 and best_species[-1] != best_species[-2]):
+            mutate_coef = (np.linalg.norm(np.array(best_species[-1]) - np.array(best_species[-2])))
+        else:
+            mutate_coef = 1
+        population = mutation_func(population, function_ranges, mutation_pobability, 
+        precision=precision, mutate_coef=mutate_coef)
 
+        best_species.append(find_better_species(population, func_to_optimize))
+        print(func_to_optimize(best_species[-1]))
         print(i)
         i = i + 1
 
