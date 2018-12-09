@@ -2,7 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 ## each public function returns three variables 
-# function: Function, func_dimension: int, function_range: [begin, end]*func_dimension
+# function - the math function iself          
+# dimension - integer dimension of function                              
+# range - the range of function values ([1,2] if n=1, [1,2,1,2] if n=2)  
+# printFunction - function that builds the plot
 
 def __first(x):
     if (-1 > x[0] or x[0] > 1): return None
