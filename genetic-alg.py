@@ -6,12 +6,8 @@ import matplotlib.pyplot as plt
 def fitness(func, best_species, precision):
 
     if (len(best_species) > 1 and
-        abs(func(best_species[- 1]) -
-            func(best_species[- 2])) < precision and
             not (best_species[-1] == best_species[-2]) and
             np.linalg.norm(np.array(best_species[-1]) - np.array(best_species[-2])) < precision):
-    # должно работать с этим условием, но пока что нет)
-    # if len(best_species) > 1 and func(best_species[len(best_species) - 1]) < precision:
         return False
     else:
         return True
@@ -196,7 +192,7 @@ MUTATION_PROBABILITY = 0.1
 CROSSOVER_PROBABILITY = 0.5
 INITIAL_POPULATION = 100
 POPULATION_LIMIT = 30
-PRECISION = 1e-5
+PRECISION = 1e-2
 #################################################
 func, dimension, ranges, print_plot = FUNCTION
 pop, population, best_species = gen_alg(crossover_func=CROSSOVER, mutation_func=mutate, selection_func=SELECTION,
