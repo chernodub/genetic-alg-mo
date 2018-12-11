@@ -24,7 +24,6 @@ def __getPlotFirst(bestPoint=[0]):
     
     return base, zoomed, [bestPoint[0] - 2*0.1, bestPoint[0] + 2*0.1]
 
-
 def __third(x):
     x = np.array(x)
     if ((x > 16).any() or (x < -16).any()): return None
@@ -103,3 +102,5 @@ def eighth():
 
 def twelfth():
     return __twelfth, 2, [0, 4]*2, __getPlotTwelfth
+
+
