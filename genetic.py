@@ -127,8 +127,8 @@ def find_better_species(population, func_to_optimize):
 
 def gen_alg(crossover_func, mutation_func, selection_func,
                 func_to_optimize, dimension, function_ranges,
-                crossover_probability=0.5, mutation_pobability=0.1,
-                fitness_func=fitness, initial_population=5, population_limit=5, precision=1e-2):
+                crossover_probability=0.8, mutation_pobability=0.1,
+                fitness_func=fitness, initial_population=100, population_limit=30, precision=1e-2):
 
     if not (0 <= crossover_probability <= 1 and 0 <= mutation_pobability <= 0.1 and precision > 0 and precision < 1
                 and initial_population > 0 and population_limit > 0 and dimension > 0):
@@ -160,69 +160,3 @@ def gen_alg(crossover_func, mutation_func, selection_func,
 
     return find_better_species(population, func_to_optimize), population, best_species, i
 
-
-# def showResults(best_species, population):
-#     print("Best point: ", pop, ", F(x)=", func(pop), ", i = " , iters)
-
-#     base, zoomed, ranges = plots(best_species[-1])
-#     if (func != functions.__first):
-#         # Plotting base
-#         for p in population:
-#             base.plot(p[0], p[1], 'wo')
-#         for p in best_species:
-#             base.plot(p[0], p[1], 'bo')
-#         base.plot(pop[0], pop[1], 'ro')
-        
-#         population = list(filter(lambda x: x[0] > ranges[0] and x[0] < ranges[1] and x[1] > ranges[2] and x[1] < ranges[3], population))
-#         best_species = list(filter(lambda x: x[0] > ranges[0] and x[0] < ranges[1] and x[1] > ranges[2] and x[1] < ranges[3], best_species))
-
-#         # Plotting zoomed 
-#         for p in population:
-#             zoomed.plot(p[0], p[1], 'wo')
-#         for p in best_species:
-#             zoomed.plot(p[0], p[1], 'bo')
-#         zoomed.plot(pop[0], pop[1], 'ro')
-#     else:
-#         # Plotting base
-#         for p in population:
-#             base.plot(p[0], func(p), 'go')
-
-#         base.plot(pop[0], func(pop), 'ro')
-
-#         population = list(filter(lambda x: x[0] > ranges[0] and x[0] < ranges[1], population))
-
-#         # Plotting zoomed
-#         for p in population:
-#             zoomed.plot(p[0], func(p), 'go')
-
-#         zoomed.plot(pop[0], func(pop), 'ro')
-#     plt.show()
-    
-# functions_sample = [functions.first(), functions.third(), functions.fifth(), functions.eighth(), functions.twelfth()]
-
-
-
-# FUNCTION = functions.eighth()
-# CROSSOVER = uniform_crossover
-# SELECTION = tournament_selection
-# MUTATION = mutate
-# MUTATION_PROBABILITY = 0.1
-# CROSSOVER_PROBABILITY = 0.5
-# INITIAL_POPULATION = 100
-# POPULATION_LIMIT = 30
-# PRECISION = 1e-2
-
-# func, dimension, ranges, plots = FUNCTION
-
-# itersSum = 0
-# for i in range(10):
-#     print(i)
-#     pop, population, best_species, iters = gen_alg(crossover_func=CROSSOVER, mutation_func=MUTATION, selection_func=SELECTION,
-#                                 func_to_optimize=func, dimension=dimension, function_ranges=ranges,
-#                                 crossover_probability=CROSSOVER_PROBABILITY, mutation_pobability=MUTATION_PROBABILITY,
-#                                 initial_population=INITIAL_POPULATION, 
-#                                 population_limit=POPULATION_LIMIT, precision=PRECISION)
-#     itersSum = itersSum + iters
-
-# print("Average iterations: ", itersSum/30)
-# showResults(best_species, population)
